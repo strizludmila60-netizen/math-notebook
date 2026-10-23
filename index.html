@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Цифровий зошит (Вебверсія)</title>
     <style>
         body {
@@ -14,8 +14,8 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            touch-action: none; /* Забороняє стандартні жести прокручування на планшетах */
         }
-        /* Верхня та нижня панелі */
         .toolbar {
             background-color: #ffffff;
             border-bottom: 1px solid #ddd;
@@ -50,7 +50,6 @@
         .btn-green { background-color: green; }
         .btn-clear { background-color: #fce8e6; color: #d93025; }
 
-        /* Центральна область з холстом */
         .canvas-container {
             flex: 1;
             position: relative;
@@ -63,12 +62,12 @@
         canvas {
             display: block;
             cursor: crosshair;
+            touch-action: none;
         }
     </style>
 </head>
 <body>
 
-    <!-- ВЕРХНЯ ПАНЕЛЬ (Завдання) -->
     <div class="toolbar">
         <button class="btn-task" onclick="loadTask('task1.png')">Завдання 1</button>
         <button class="btn-task" onclick="loadTask('task2.png')">Завдання 2</button>
@@ -78,12 +77,10 @@
         <button class="btn-task" onclick="loadTask('task6.png')">Завдання 6</button>
     </div>
 
-    <!-- ЦЕНТРАЛЬНЕ ПОЛОТНО -->
     <div class="canvas-container" id="container">
         <canvas id="paintCanvas"></canvas>
     </div>
 
-    <!-- НИЖНЯ ПАНЕЛЬ (Інструменти малювання) -->
     <div class="toolbar bottom-bar">
         <div>
             <button class="btn-color btn-black" onclick="setColor('black')">Чорний</button>
@@ -101,7 +98,6 @@
         const ctx = canvas.getContext('2d');
         const container = document.getElementById('container');
 
-        // Налаштування розмірів холсту під екран
         function resizeCanvas() {
             canvas.width = container.clientWidth;
             canvas.height = container.clientHeight;
@@ -117,18 +113,15 @@
             currentColor = color;
         }
 
-        // Малювання сітки (як у вашому Python-коді)
         function drawGrid() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Якщо є завантажене завдання — малюємо його з прозорістю
             if (currentImage) {
-                ctx.globalAlpha = 0.4; // Аналог opacity у Python
+                ctx.globalAlpha = 0.4;
                 ctx.drawImage(currentImage, 20, 20);
-                ctx.globalAlpha = 1.0; // Повертаємо повну непрозорість для пензля
+                ctx.globalAlpha = 1.0;
             }
 
-            // Малюємо сітку з кроком 25 пікселів
             ctx.strokeStyle = '#e0e0e0';
             ctx.lineWidth = 1;
             for (let x = 0; x < canvas.width; x += 25) {
@@ -153,7 +146,7 @@
                 drawGrid();
             };
             img.onerror = function() {
-                alert("Файл завдання " + filename + " не знайдено в папці сайту!");
+                alert("Не вдалося завантажити файл завдання: " + filename);
             }
         }
 
@@ -161,25 +154,30 @@
             drawGrid();
         }
 
-        // Логіка малювання мишею та пальцем (для сенсорних екранів)
         let painting = false;
 
         function startPosition(e) {
+            e.preventDefault();
             painting = true;
             draw(e);
         }
 
-        function endPosition() {
+        function endPosition(e) {
+            if (e) e.preventDefault();
             painting = false;
             ctx.beginPath();
         }
 
         function draw(e) {
             if (!painting) return;
+            e.preventDefault();
             
             const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX || e.touches[0].clientX) - rect.left;
-            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+            const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+            
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
 
             ctx.lineWidth = 2;
             ctx.lineCap = 'round';
@@ -195,9 +193,9 @@
         canvas.addEventListener('mouseup', endPosition);
         canvas.addEventListener('mousemove', draw);
 
-        canvas.addEventListener('touchstart', startPosition);
-        canvas.addEventListener('touchend', endPosition);
-        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchstart', startPosition, { passive: false });
+        canvas.addEventListener('touchend', endPosition, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
     </script>
 </body>
 </html>
