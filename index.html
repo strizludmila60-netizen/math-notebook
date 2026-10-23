@@ -163,7 +163,7 @@
         }
 
         function endPosition(e) {
-            if (e) e.preventDefault();
+            e.preventDefault();
             painting = false;
             ctx.beginPath();
         }
@@ -173,11 +173,8 @@
             e.preventDefault();
             
             const rect = canvas.getBoundingClientRect();
-            const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
-            const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
-            
-            const x = clientX - rect.left;
-            const y = clientY - rect.top;
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
 
             ctx.lineWidth = 2;
             ctx.lineCap = 'round';
@@ -189,13 +186,11 @@
             ctx.moveTo(x, y);
         }
 
-        canvas.addEventListener('mousedown', startPosition);
-        canvas.addEventListener('mouseup', endPosition);
-        canvas.addEventListener('mousemove', draw);
-
-        canvas.addEventListener('touchstart', startPosition, { passive: false });
-        canvas.addEventListener('touchend', endPosition, { passive: false });
-        canvas.addEventListener('touchmove', draw, { passive: false });
+        // Використовуємо універсальні Pointer Events для миші, пальців і стілусів
+        canvas.addEventListener('pointerdown', startPosition);
+        canvas.addEventListener('pointerup', endPosition);
+        canvas.addEventListener('pointermove', draw);
+        canvas.addEventListener('pointercancel', endPosition);
     </script>
 </body>
 </html>
