@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Цифровий зошит (Вебверсія)</title>
+    <title>Цифровий зошит (Гурток робототехніки ТЕРЕШКІВКА)</title>
     <style>
         body {
             margin: 0;
@@ -49,6 +49,7 @@
         .btn-blue { background-color: blue; }
         .btn-green { background-color: green; }
         .btn-clear { background-color: #fce8e6; color: #d93025; }
+        .btn-save { background-color: #e6f4ea; color: #137333; }
 
         .canvas-container {
             flex: 1;
@@ -87,9 +88,10 @@
             <button class="btn-color btn-red" onclick="setColor('red')">Червоний</button>
             <button class="btn-color btn-blue" onclick="setColor('blue')">Синій</button>
             <button class="btn-color btn-green" onclick="setColor('green')">Зелений</button>
+            <button class="btn-clear" onclick="clearCanvas()">Очистити</button>
         </div>
         <div>
-            <button class="btn-clear" onclick="clearCanvas()">Очистити</button>
+            <button class="btn-save" onclick="saveAsImage()">💾 Зберегти роботу</button>
         </div>
     </div>
 
@@ -98,6 +100,10 @@
         const ctx = canvas.getContext('2d');
         const container = document.getElementById('container');
 
+        let currentColor = 'black';
+        let currentImage = null;
+        let painting = false;
+
         function resizeCanvas() {
             canvas.width = container.clientWidth;
             canvas.height = container.clientHeight;
@@ -105,9 +111,6 @@
         }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
-
-        let currentColor = 'black';
-        let currentImage = null;
 
         function setColor(color) {
             currentColor = color;
@@ -154,16 +157,27 @@
             drawGrid();
         }
 
-        let painting = false;
+        function saveAsImage() {
+            const link = document.createElement('a');
+            link.download = 'rozvjazok_zavdannya.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
 
         function startPosition(e) {
             e.preventDefault();
             painting = true;
-            draw(e);
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            ctx.beginPath(); // Обов'язково починаємо новий шлях
+            ctx.moveTo(x, y); // Переносимо курсор у точку торкання без проведення лінії
         }
 
         function endPosition(e) {
-            if (e) e.preventDefault();
+            e.preventDefault();
             painting = false;
             ctx.beginPath();
         }
@@ -173,11 +187,8 @@
             e.preventDefault();
             
             const rect = canvas.getBoundingClientRect();
-            const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
-            const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
-            
-            const x = clientX - rect.left;
-            const y = clientY - rect.top;
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
 
             ctx.lineWidth = 2;
             ctx.lineCap = 'round';
@@ -185,17 +196,12 @@
 
             ctx.lineTo(x, y);
             ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x, y);
         }
 
-        canvas.addEventListener('mousedown', startPosition);
-        canvas.addEventListener('mouseup', endPosition);
-        canvas.addEventListener('mousemove', draw);
-
-        canvas.addEventListener('touchstart', startPosition, { passive: false });
-        canvas.addEventListener('touchend', endPosition, { passive: false });
-        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('pointerdown', startPosition);
+        canvas.addEventListener('pointerup', endPosition);
+        canvas.addEventListener('pointermove', draw);
+        canvas.addEventListener('pointercancel', endPosition);
     </script>
 </body>
 </html>
