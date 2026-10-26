@@ -116,17 +116,15 @@
             currentColor = color;
         }
 
-        function drawGrid() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            if (currentImage) {
-                ctx.globalAlpha = 0.4;
-                ctx.drawImage(currentImage, 20, 20);
-                ctx.globalAlpha = 1.0;
-            }
+      function drawGrid() {
+            // 1. Обов'язково заливаємо полотно білим кольором
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.strokeStyle = '#e0e0e0';
+            // 2. Малюємо світло-блакитну сітку зошита
+            ctx.strokeStyle = '#d0e0f0';
             ctx.lineWidth = 1;
+
             for (let x = 0; x < canvas.width; x += 25) {
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
@@ -138,6 +136,30 @@
                 ctx.moveTo(0, y);
                 ctx.lineTo(canvas.width, y);
                 ctx.stroke();
+            }
+
+            // 3. Відображаємо завдання з автоматичним зменшенням (якщо воно завелике)
+            if (currentImage) {
+                const imgX = 20;
+                const imgY = 20;
+
+                // Максимальна ширина для картинки завдання (наприклад, 600 пікселів або половина екрана)
+                let imgWidth = currentImage.width;
+                let imgHeight = currentImage.height;
+                const maxWidth = Math.min(650, canvas.width - 40);
+
+                if (imgWidth > maxWidth) {
+                    const ratio = maxWidth / imgWidth;
+                    imgWidth = maxWidth;
+                    imgHeight = imgHeight * ratio;
+                }
+
+                // Біла підкладка під завдання
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(imgX - 5, imgY - 5, imgWidth + 10, imgHeight + 10);
+                
+                // Малюємо зменшену картинку
+                ctx.drawImage(currentImage, imgX, imgY, imgWidth, imgHeight);
             }
         }
 
